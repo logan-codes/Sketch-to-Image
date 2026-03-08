@@ -6,44 +6,69 @@ from PIL import Image
 import gradio as gr
 import numpy as np
 import logging
+import sys
 
+# Configure logging for both console and file
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler('app.log')
+    ]
 )
 
 logger = logging.getLogger(__name__)
+
+# Test logging immediately
+logger.info("Application starting...")
+logger.info(f"Python version: {sys.version}")
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
 logger.info(f"Device: {device}")
+logger.info(f"Torch version: {torch.__version__}")
+logger.info(f"CUDA available: {torch.cuda.is_available()}")
 
-logger.info("Loading Controlnet...")
-cn= ControlNetModel.from_pretrained(
-    "lllyasviel/sd-controlnet-scribble",
-    torch_dtype=dtype
-)
-logger.info("Controlnet Loaded.")
+# Add error handling for model loading
+try:
+    logger.info("Loading Controlnet...")
+    cn = ControlNetModel.from_pretrained(
+        "lllyasviel/sd-controlnet-scribble",
+        torch_dtype=dtype
+    )
+    logger.info("Controlnet Loaded.")
+except Exception as e:
+    logger.error(f"Failed to load ControlNet: {str(e)}")
+    raise
 
-logger.info("Loading Stable Diffusion Controlnet Pipeline...")
-pipe= StableDiffusionControlNetPipeline.from_pretrained(
-    "runwayml/stable-diffusion-v1-5",
-    controlnet=cn,
-    torch_dtype=dtype,
-    safety_checker=None
-)
-logger.info("Stable Diffusion Controlnet Pipeline Loaded.")
+try:
+    logger.info("Loading Stable Diffusion Controlnet Pipeline...")
+    pipe = StableDiffusionControlNetPipeline.from_pretrained(
+        "runwayml/stable-diffusion-v1-5",
+        controlnet=cn,
+        torch_dtype=dtype,
+        safety_checker=None
+    )
+    logger.info("Stable Diffusion Controlnet Pipeline Loaded.")
+except Exception as e:
+    logger.error(f"Failed to load pipeline: {str(e)}")
+    raise
 
-pipe.scheduler= UniPCMultistepScheduler.from_config(
-    pipe.scheduler.config
-)
-if torch.cuda.is_available():
-    pipe.enable_attention_slicing()
-    pipe.enable_model_cpu_offload()
-else:
-    pipe= pipe.to(device) 
-logger.info("Config setup completed")
+try:
+    pipe.scheduler = UniPCMultistepScheduler.from_config(
+        pipe.scheduler.config
+    )
+    if torch.cuda.is_available():
+        pipe.enable_attention_slicing()
+        pipe.enable_model_cpu_offload()
+    else:
+        pipe = pipe.to(device)
+    logger.info("Config setup completed")
+except Exception as e:
+    logger.error(f"Failed to setup pipeline configuration: {str(e)}")
+    raise
 
 def generate(sketch_data, prompt, num_inference, guidance):
     logger.info("Image generation requested")
@@ -135,4 +160,10 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(), title="Sketch to Image") as demo
         outputs=output_image
     )
 
-demo.launch(server_name="0.0.0.0", server_port=7860)
+logger.info("Starting Gradio demo...")
+try:
+    demo.launch(server_name="0.0.0.0", server_port=7860)
+    logger.info("Gradio demo launched successfully")
+except Exception as e:
+    logger.error(f"Failed to launch Gradio demo: {str(e)}")
+    raise
