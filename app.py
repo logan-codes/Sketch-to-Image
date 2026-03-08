@@ -115,44 +115,45 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(), title="Sketch to Image") as demo
         "Draw an sketch and describe it, and watch AI bring it to life using Controlnet + Stable Diffusion",
         elem_id="subtitle"
     )
-    with gr.Column(scale=1) as col:
-        sketch_input = gr.Sketchpad(
-            label="Your Sketch",
-            type="numpy",
-            canvas_size=(512, 512),
-        )
-        prompt_input = gr.Textbox(
-            label="Describe your sketch",
-            placeholder="e.g. a cozy cabin in the forest at sunset, realistic",
-            lines=2
-        )
-
-        with gr.Accordion("⚙️ Advanced Settings", open=False):
-            steps_slider = gr.Slider(
-                minimum=10, maximum=50, value=20, step=1,
-                label="Inference Steps",
-                info="More steps = better quality but slower"
+    with gr.Row():
+        with gr.Column(scale=1) as col:
+            sketch_input = gr.Sketchpad(
+                label="Your Sketch",
+                type="numpy",
+                canvas_size=(512, 512),
             )
-            guidance_slider = gr.Slider(
-                minimum=1.0, maximum=15.0, value=7.5, step=0.5,
-                label="Guidance Scale",
-                info="How strictly to follow your prompt"
+            prompt_input = gr.Textbox(
+                label="Describe your sketch",
+                placeholder="e.g. a cozy cabin in the forest at sunset, realistic",
+                lines=2
             )
 
-        generate_btn = gr.Button(
-            "Generate 🎨", variant="primary", elem_id="generate-btn"
-        )
+            with gr.Accordion("⚙️ Advanced Settings", open=False):
+                steps_slider = gr.Slider(
+                    minimum=10, maximum=50, value=20, step=1,
+                    label="Inference Steps",
+                    info="More steps = better quality but slower"
+                )
+                guidance_slider = gr.Slider(
+                    minimum=1.0, maximum=15.0, value=7.5, step=0.5,
+                    label="Guidance Scale",
+                    info="How strictly to follow your prompt"
+                )
 
-        with gr.Column(scale=1):
-            output_image = gr.Image(
-                label="Generated Image",
-                type="pil",
-                height=512
+            generate_btn = gr.Button(
+                "Generate 🎨", variant="primary", elem_id="generate-btn"
             )
-            gr.Markdown(
-                "💡 **Tips:** Keep sketches simple and clear. "
-                "Detailed prompts give better results.",
-            )
+
+            with gr.Column(scale=1):
+                output_image = gr.Image(
+                    label="Generated Image",
+                    type="pil",
+                    height=512
+                )
+                gr.Markdown(
+                    "💡 **Tips:** Keep sketches simple and clear. "
+                    "Detailed prompts give better results.",
+                )
 
     generate_btn.click(
         fn=generate,
