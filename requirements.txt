@@ -1,0 +1,7 @@
+accelerate
+diffusers
+transformers
+controlnet-aux
+Pillow
+opencv-python
+numpy
